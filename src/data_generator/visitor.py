@@ -81,62 +81,6 @@ def generate_visitors(session, num_visitors):
         visitor.save_to_db()
     return visitors
 
-# class Visitor:
-#     def __init__(self, channel = 'Direct', return_visitor=False, visitor_id=None, name=None, gender=None, age=None, email=None):
-              
-#         fake = Faker()
-#         self.visitor_id = visitor_id if visitor_id else str(uuid.uuid4())
-#         self.return_visitor = return_visitor
-#         self.channel = channel
-#         self.signed_up =False
-#         self.name = None
-#         self.gender = None
-#         self.age = None
-#         self.email = None
-#         self.signed_up = False  # Track if the visitor has signed up
-
-#     def complete_signup(self):
-#         if not self.signed_up:
-#             fake = Faker()
-#             self.gender = random.choice(['Male', 'Female'])
-#             if self.gender == "Male":
-#                 self.name = fake.first_name_male() + " " + fake.last_name()
-#             else:
-#                 self.name = fake.first_name_female() + " " + fake.last_name()
-#             self.age = random.randint(18, 80)
-#             self.email = fake.email()
-#             self.signed_up = True 
-
-#     def to_dict(self):
-#         """Convert visitor object to dictionary format."""
-#         return {
-#             'visitor_id': self.visitor_id,
-#             'name': self.name if self.signed_up else None,
-#             'gender': self.gender if self.signed_up else None,
-#             'age': self.age if self.signed_up else None,
-#             'email': self.email if self.signed_up else None,
-#         }
-# # def assign_channel(channel_distribution):
-# #     return np.random.choice(list(channel_distribution.keys()), p=list(channel_distribution.values()))
-
-# def generate_visitors(num_visitors):
-#     """Create and return a list of visitor objects."""
-#     #channel = assign_channel(channel_distribution)
-#     return [Visitor() for _ in range(num_visitors)]
-
-# def get_return_visitors(DB_PATH, n_num_return_visitors):
-#     """Fetch past visitors from the database and return a subset as returning visitors."""
-#     try:
-#         conn = sqlite3.connect(DB_PATH)
-#         query = "SELECT * FROM visitors"
-#         past_visitors = pd.read_sql(query, conn)
-#         conn.close()
-#     except:
-#         return []
-    
-#     return_visitors = past_visitors.sample(n=n_num_return_visitors, replace=False).to_dict(orient='records')
-#     return return_visitors
-
 def gaussian_arrivals(x, mean, sigma):
     """Set arrival rates based on gaussian (normal) distribution"""
     gaussian_constant = 1 / np.sqrt(2 * np.pi)

@@ -10,16 +10,6 @@ def get_db_session(db_path="visitors.db"):
     Session = sessionmaker(bind=engine)
     return Session()
 
-# def check_database_exists(db_path):
-#     """Checks if the SQLite database exists and creates it if it doesn't."""
-#     if not os.path.exists(db_path):
-#         print(f"Database not found at {db_path}. Creating a new one...")
-#         conn = sqlite3.connect(db_path)
-#         conn.close()
-#         print("Database created successfully.")
-#     else:
-#         print(f"Database found at {db_path}.")
-
 def check_database_exists(db_path):
     """Ensure the database and tables exist by initializing ORM."""
     session = get_db_session(db_path)
@@ -52,19 +42,6 @@ def check_table_exists(db_path, table_name):
     table_exists = cursor.fetchone()
     conn.close()
     return table_exists is not None
-
-# Reset database tables
-# def reset_database_tables(config):
-#     db_path = config["DB_PATH"]
-#     conn = sqlite3.connect(db_path)
-
-#     cursor = conn.cursor()
-#     # Execute SQL command to drop the table
-#     cursor.execute("DROP TABLE IF EXISTS visitors")
-#     cursor.execute("DROP TABLE IF EXISTS interactions")
-#     # Commit the change and close the connection
-#     conn.commit()
-#     conn.close()
 
 def reset_database_tables(config):
     db_path = config["DB_PATH"]

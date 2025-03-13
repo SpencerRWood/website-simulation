@@ -9,7 +9,6 @@ from sqlalchemy.sql.expression import func
 from .website import Session, Website
 from .visitor import Visitor,generate_visitors,visitor_arrival_times,gaussian_arrivals
 from .database_utils import get_db_session
-##get_return_visitors
 
 def simulate_visitor_sessions(env, website, visitors, arrival_times):
     """Simulates visitors arriving at specific times."""
@@ -47,7 +46,6 @@ def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_nu
     ##TODO: Generate visitors from marketing channel
     ##TODO: Apply seasonality index to summed visitors
 
-
     ##Generate base visitors, store data in dataframe
     new_visitors = generate_visitors(session, n_num_base_visitors)
     for visitor in new_visitors:
@@ -78,9 +76,6 @@ def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_nu
     session.commit()
     session.close()
 
-    # demo_data = [visitor.to_dict() for visitor in new_visitors]
-    # demo_df = pd.DataFrame(demo_data)
-
     ##Exract interactions post simulation
     interactions = []
     for visitor in visitor_data.value:
@@ -89,7 +84,6 @@ def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_nu
 
     ##Write visitors, interactions to database table
     conn = sqlite3.connect(DB_PATH)
-    # demo_df.to_sql('visitors', conn, if_exists='append',index=False)
     interactions_df.to_sql('interactions', conn,if_exists='append',index=False)
     conn.close()
     return current_date + timedelta(days=1)
