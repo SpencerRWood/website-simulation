@@ -1,0 +1,50 @@
+{
+
+    "DB_PATH": "website_data.db",
+    "CSV_CAMPAIGN_PATH": "campaign_data.csv",
+    "start_date":"2025-03-01",
+    "end_date":"2025-03-07",
+    "n_num_base_visitors": {
+      "mean":500,
+      "std_dev":50
+    },
+    "channel_distribution": {
+      "Direct": 0.30,
+      "Organic Search": 0.25,
+      "Paid Search": 0.20,
+      "Social Media": 0.15,
+      "Email": 0.10
+    },
+    "website_structure": {
+      "Homepage": {
+        "dropoff_probability": 0.5,
+        "clickable_elements": ["Watch Video"],
+        "navigation_elements": ["Benefits Overview"]
+      },
+      "Benefits Overview": {
+        "dropoff_probability": 0.1,
+        "clickable_elements": ["FAQ - Read More"],
+        "navigation_elements": ["Account Sign-up"]
+      },
+      "Account Sign-up": {
+        "dropoff_probability": 0.1,
+        "navigation_elements": ["Enrollment Process"]
+      },
+      "Enrollment Process": {
+        "dropoff_probability": 0.1,
+        "clickable_elements": ["Upload Documents"],
+        "navigation_elements": ["Review Enrollment"],
+        "account_creation": true
+      },
+      "Review Enrollment": {
+        "dropoff_probability": 0.1,
+        "clickable_elements": [], 
+        "navigation_elements": ["Confirm Enrollment"]
+      },
+      "Enrollment Confirmation": {
+        "dropoff_probability": 0.1,
+        "clickable_elements": [],
+        "navigation_elements": []
+      }
+    }
+  }

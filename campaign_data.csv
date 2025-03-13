@@ -1,0 +1,5 @@
+﻿campaign_name,channel,spend,start_date,end_date,trigger_type,event_trigger,schedule
+Discover your benefits,Display,30000,1/1/24,3/1/24,,,
+Benefits Retargeting,Email,10000,2/1/24,5/1/24,event_based,abandonment,
+Tuesday Awareness Email,Email,15000,1/1/24,12/31/24,scheduled,scheduled,weekly_tuesday
+Benefits Retargeting,Display,40000,1/1/24,12/31/24,,,
