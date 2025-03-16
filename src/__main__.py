@@ -7,9 +7,9 @@ import pandas as pd
 from faker import Faker
 from datetime import datetime
 
-from data_generator.simulation import run_daily_simulation, seasonal_multiplier, min_max_scaling
+from data_generator.season import seasonal_multiplier
+from data_generator.simulation import run_daily_simulation
 from data_generator.database_utils import check_table_exists, initialize_campaign_table, reset_database_tables, get_db_session
-
 
 # Set the seed globally at the highest level
 ##FIXME: Number of page interactions are not setting Seeds correctly
@@ -28,6 +28,7 @@ def main(config):
     end_date = datetime.strptime(config["end_date"], "%Y-%m-%d")
     website_structure = config["website_structure"]
     n_num_base_visitor_distribution = config["n_num_base_visitors"]
+    seasonal_distribution = config["seasonal_distribution"]
 
     ##TODO: Check if database exists and if not create it
     ##Check is campaign_data table exists
@@ -37,10 +38,7 @@ def main(config):
     ##TODO: Abstract this to a module - have the config params passed through
     ##Create seasonlity factor
     date_range = pd.date_range(start=start_date, end=end_date)
-    gamma_1 = np.random.uniform(0.5, 1, size=2)  # Amplitudes for cosine
-    gamma_2 = np.random.uniform(0.5, 1, size=2)  # Amplitudes for sine
-    seasonal_multiplier_list = [seasonal_multiplier(date,gamma_1,gamma_2) for date in date_range]
-    seasonality = min_max_scaling(seasonal_multiplier_list, 1, 1.25)
+    seasonality = seasonal_multiplier(date_range, seasonal_distribution)
 
     for i, current_date in enumerate(date_range):
         run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution, seasonality[i])

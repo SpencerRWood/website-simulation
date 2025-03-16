@@ -33,29 +33,6 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
 
     return visitor_sessions
 
-def seasonal_multiplier(date, gamma_1, gamma_2, harmonics=2):
-    """Computes seasonal adjustment using a Fourier series approximation.
-
-    Parameters:
-    t (int or array): Time index (e.g., week number).
-    gamma_1 (array): Coefficients for cosine terms.
-    gamma_2 (array): Coefficients for sine terms.
-    harmonics (int): Number of harmonics to include in the sum.
-
-    Returns:
-    float or array: Seasonality adjustment factor.
-    """
-    t = date.isocalendar()[1]
-    seasonality = np.zeros_like(t, dtype=float)
-    for d in range(1, harmonics + 1):
-        seasonality += gamma_1[d-1] * np.cos((2 * np.pi * d / 52) * t) \
-                       + gamma_2[d-1] * np.sin((2 * np.pi * d / 52) * t)
-    return seasonality
-
-def min_max_scaling(val_list, floor_val, ceiling_val):
-    min_val, max_val = min(val_list), max(val_list)
-    return [((val-min_val) / (max_val - min_val)) * (ceiling_val - floor_val) + floor_val for val in val_list]
-
 def sample_percentage(total, mean_percentage=0.10, std_dev_percentage=0.02, min_percentage=0.05, max_percentage=0.15):
     ##TODO: Make it return 10% of total - this means total + adjusted value
     ##TODO: Add all parameters to config

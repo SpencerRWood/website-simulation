@@ -7,6 +7,22 @@
       "mean":500,
       "std_dev":50
     },
+    "seasonal_distribution":{
+      "gamma_1": {
+        "low": 0.5,
+        "high": 1.0,
+        "size": 2
+      },
+      "gamma_2": {
+        "low": 0.5,
+        "high": 1.0,
+        "size": 2
+      },
+      "scaling": {
+      "min_factor_val": 1.0,
+      "max_factor_val": 1.25
+      }
+    },
     "website_structure": {
       "Homepage": {
         "dropoff_probability": 0.5,
