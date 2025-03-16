@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func 
 
 from .website import Session, Website
-from .visitor import Visitor,generate_visitors,visitor_arrival_times,gaussian_arrivals
+from .visitor import Visitor,generate_visitors,get_return_visitors, visitor_arrival_times,gaussian_arrivals
 from .database_utils import get_db_session
 
 def simulate_visitor_sessions(env, website, visitors, arrival_times):
@@ -22,8 +22,15 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
         session = Session(env, website, visitor)
         env.process(session.simulate_site_interactions())
         visitor_sessions.append(session)
-
     yield env.timeout(1) 
+
+    # def process_visitor(visitor, arrival_time):
+    #     delay = arrival_time - env.now
+    #     if delay > 0:
+    #         yield env.timeout(delay)
+    #     session = Session(env, website, visitor)
+    #     env.process(session.simulate_site_interactions())
+
     return visitor_sessions
 
 def sample_percentage(total, mean_percentage=0.10, std_dev_percentage=0.02, min_percentage=0.05, max_percentage=0.15):
@@ -34,9 +41,9 @@ def sample_percentage(total, mean_percentage=0.10, std_dev_percentage=0.02, min_
     
     return int(total * sampled_percentage)
 
-def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_num_base_visitor_distribution):
+def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution):
     print(f"Running simulation for {current_date}")
-    session = get_db_session(DB_PATH)
+    db_session = get_db_session(DB_PATH)
 
     ##Iniatilize number of base visitors to the site for that day
     n_num_base_visitors = int(np.random.normal(n_num_base_visitor_distribution["mean"]
@@ -47,16 +54,26 @@ def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_nu
     ##TODO: Apply seasonality index to summed visitors
 
     ##Generate base visitors, store data in dataframe
-    new_visitors = generate_visitors(session, n_num_base_visitors)
+    new_visitors = generate_visitors(db_session, n_num_base_visitors, created_at=current_date)
     for visitor in new_visitors:
         visitor.save_to_db()
 
     ##Generate return visitors
     return_sample = sample_percentage(n_num_base_visitors)
-    return_visitors = session.query(Visitor).order_by(func.random()).limit(return_sample).all()
+    ##TODO: func.random() is a db operation, not impacted by seeds
+    # return_visitors = (
+    #     db_session.query(Visitor)
+    #     .filter(Visitor.created_at < current_date)
+    #     .order_by(func.random())
+    #     .limit(return_sample)
+    #     .all()
+    #     )
+    
+    return_visitors = get_return_visitors(db_session,return_sample,current_date)
+    print(f"Number of return visitors: {len(return_visitors)}")
 
     for visitor in return_visitors:
-        visitor.session = session
+        visitor.db_session = db_session
 
     ##Combine visitor types
     visitors = new_visitors + return_visitors
@@ -73,9 +90,7 @@ def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_nu
     website = Website(env, website_structure, current_date)
     visitor_data = env.process(simulate_visitor_sessions(env, website, visitors, arrival_times))
     env.run()
-    session.commit()
-    session.close()
-
+    
     ##Exract interactions post simulation
     interactions = []
     for visitor in visitor_data.value:
@@ -83,7 +98,11 @@ def run_daily_simulation(current_date, session, DB_PATH, website_structure, n_nu
     interactions_df = pd.DataFrame(interactions)
 
     ##Write visitors, interactions to database table
+    ##TODO - figure out what to do with this
     conn = sqlite3.connect(DB_PATH)
     interactions_df.to_sql('interactions', conn,if_exists='append',index=False)
     conn.close()
+
+    db_session.commit()
+    db_session.close()
     return current_date + timedelta(days=1)

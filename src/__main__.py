@@ -1,4 +1,5 @@
 ##TODO: If someone has signed up, make sure it doesn't over write the status if they move through again
+##TODO: Implement MLFlow for experiment tracking
 import json
 import random
 import numpy as np
@@ -9,6 +10,7 @@ from data_generator.simulation import run_daily_simulation
 from data_generator.database_utils import check_table_exists, initialize_campaign_table, check_database_exists, reset_database_tables, get_db_session
 
 # Set the seed globally at the highest level
+##FIXME: Number of page interactions are not setting Seeds correctly
 SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
@@ -25,9 +27,7 @@ def main(config):
     website_structure = config["website_structure"]
     n_num_base_visitor_distribution = config["n_num_base_visitors"]
 
-    ##Check if database exists and if not create it
-    # check_database_exists(DB_PATH)
-    session = get_db_session(config["DB_PATH"])
+    ##TODO: Check if database exists and if not create it
 
     ##Check is campaign_data table exists
     # if not check_table_exists(DB_PATH, "campaigns"):
@@ -36,8 +36,7 @@ def main(config):
     ##Run daily simulations based on start and end date
     current_date = start_date
     while current_date <= end_date:
-        current_date = run_daily_simulation(current_date, session, DB_PATH, website_structure, n_num_base_visitor_distribution)
-    session.close()
+        current_date = run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution)
 
 if __name__ == '__main__':
     print('Starting program...')

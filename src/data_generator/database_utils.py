@@ -2,7 +2,7 @@ import os
 import sqlite3
 import pandas as pd
 from .visitor import *
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 
 def get_db_session(db_path="visitors.db"):
     engine = create_engine(f"sqlite:///{db_path}")
@@ -45,11 +45,15 @@ def check_table_exists(db_path, table_name):
 
 def reset_database_tables(config):
     db_path = config["DB_PATH"]
-    session = get_db_session(db_path)
+    engine = create_engine(f"sqlite:///{db_path}")
+    with engine.connect() as conn:
+        conn.execute(text("PRAGMA foreign_keys = OFF;"))  # Disable foreign key constraints
+        conn.execute(text("DROP TABLE IF EXISTS visitors;"))
+        conn.execute(text("DROP TABLE IF EXISTS interactions;"))
+        conn.execute(text("DROP TABLE IF EXISTS campaigns;"))
+        conn.execute(text("PRAGMA foreign_keys = ON;"))  # Re-enable constraints
     
-    session.query(Visitor).delete()  # Clear visitor table using ORM
-    session.execute(text("DROP TABLE IF EXISTS interactions"))
-
-    session.commit()
-    session.close()
+    # Recreate tables
+    Base.metadata.create_all(engine)
+    print('All tables reset successfully.')
 

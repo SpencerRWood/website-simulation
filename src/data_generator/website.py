@@ -21,7 +21,8 @@ class Website:
     def get_current_time(self):
         """Convert simulation time (in minutes) to a timestamp."""
         current_time = datetime.combine(self.current_date, datetime.min.time()) + timedelta(minutes=self.env.now)
-        return current_time.strftime('%Y-%m-%d %H:%M:%S')
+        return current_time
+    #current_time.strftime('%Y-%m-%d %H:%M:%S')
 
 class Session:
     """Handles a single visitor's interactions on the website."""
@@ -35,23 +36,25 @@ class Session:
 
     def interaction(self, page, interaction, element=None):
         """Log a visitor's interaction."""
+        timestamp = self.website.get_current_time()
         self.data.append({
             'visitor_id': self.visitor.visitor_id,
             'channel': self.channel,
             'page': page,
             'interaction': interaction,
             'element': element,
-            'timestamp': self.website.get_current_time()
+            'timestamp': timestamp
         })
+        return timestamp
 
     def visit_page(self, page):
         
         """Handles visiting a page and interacting with elements."""
-        self.interaction(page, 'Pageview')
+        timestamp = self.interaction(page, 'Pageview')
 
         if self.website.pages.get(page, {}).get("account_creation", False):
             # print(f'Visitor {self.visitor.visitor_id} signed up on {page}')
-            self.visitor.complete_signup(session=self.visitor.session)  # Ensure update is committed
+            self.visitor.complete_signup(db_session=self.visitor.db_session, timestamp=timestamp)  # Ensure update is committed
 
         if self.website.dropoff(page):  
             yield self.env.timeout(1)
