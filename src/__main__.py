@@ -28,6 +28,7 @@ def main(config):
     end_date = datetime.strptime(config["end_date"], "%Y-%m-%d")
     website_structure = config["website_structure"]
     n_num_base_visitor_distribution = config["n_num_base_visitors"]
+    pct_return_visitors = config["pct_return_visitors"]
     seasonal_distribution = config["seasonal_distribution"]
 
     ##TODO: Check if database exists and if not create it
@@ -37,11 +38,17 @@ def main(config):
     
     ##TODO: Abstract this to a module - have the config params passed through
     ##Create seasonlity factor
+    
     date_range = pd.date_range(start=start_date, end=end_date)
     seasonality = seasonal_multiplier(date_range, seasonal_distribution)
 
     for i, current_date in enumerate(date_range):
-        run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution, seasonality[i])
+        run_daily_simulation(current_date
+                             , DB_PATH
+                             , website_structure
+                             , n_num_base_visitor_distribution
+                             , pct_return_visitors
+                             , seasonality[i])
 
 if __name__ == '__main__':
     print('Starting program...')

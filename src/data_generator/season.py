@@ -40,8 +40,3 @@ def seasonal_multiplier(date_range, seasonal_distribution):
     floor_val, ceiling_val = seasonal_distribution["scaling"]["min_factor_val"], seasonal_distribution["scaling"]["max_factor_val"]
 
     return [((val - min_val) / (max_val - min_val)) * (ceiling_val - floor_val) + floor_val for val in fourier_multiplier]
-
-# gamma_1 = np.random.uniform(0.5, 1, size=2)  # Amplitudes for cosine
-# gamma_2 = np.random.uniform(0.5, 1, size=2)  # Amplitudes for sine
-# seasonal_multiplier_list = [fourier_multiplier(date,gamma_1,gamma_2) for date in date_range]
-# seasonality = min_max_scaling(seasonal_multiplier_list, 1, 1.25)

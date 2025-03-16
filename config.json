@@ -7,6 +7,10 @@
       "mean":500,
       "std_dev":50
     },
+    "pct_return_visitors":{
+      "mean":0.1,
+      "std_dev":0.02
+    },
     "seasonal_distribution":{
       "gamma_1": {
         "low": 0.5,

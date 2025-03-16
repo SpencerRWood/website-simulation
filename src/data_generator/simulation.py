@@ -11,6 +11,7 @@ from .visitor import Visitor,generate_visitors,get_return_visitors, visitor_arri
 from .database_utils import get_db_session
 
 def simulate_visitor_sessions(env, website, visitors, arrival_times):
+    ##TODO: Optimize
     """Simulates visitors arriving at specific times."""
     visitor_sessions = []
 
@@ -33,16 +34,27 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
 
     return visitor_sessions
 
-def sample_percentage(total, mean_percentage=0.10, std_dev_percentage=0.02, min_percentage=0.05, max_percentage=0.15):
+def sample_percentage(total, params_dict):
     ##TODO: Make it return 10% of total - this means total + adjusted value
     ##TODO: Add all parameters to config
     """Returns a fluctuating percentage of a total value, normally distributed around a mean."""
+    min_percentage = 0.0
+    max_percentage = None
+
+    mean_percentage = params_dict["mean"]
+    std_dev_percentage = params_dict["std_dev"]
+
     sampled_percentage = np.random.normal(loc=mean_percentage, scale=std_dev_percentage)
     sampled_percentage = np.clip(sampled_percentage, min_percentage, max_percentage)
     
     return int(total * sampled_percentage)
 
-def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution, seasonality_factor=1):
+def run_daily_simulation(current_date
+                         , DB_PATH
+                         , website_structure
+                         , n_num_base_visitor_distribution
+                         , pct_return_visitors
+                         , seasonality_factor=1):
     print(f"Running simulation for {current_date}")
     db_session = get_db_session(DB_PATH)
 
@@ -52,7 +64,6 @@ def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_vi
     print(f"Number of base visitors: {n_num_base_visitors}")
 
     ##TODO: Generate visitors from marketing channel
-    ##TODO: Apply seasonality index to summed visitors
 
     ##Generate base visitors, store data in dataframe
     new_visitors = generate_visitors(db_session, n_num_base_visitors, created_at=current_date)
@@ -60,7 +71,7 @@ def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_vi
         visitor.save_to_db()
 
     ##Generate return visitors
-    return_sample = sample_percentage(n_num_base_visitors)
+    return_sample = sample_percentage(n_num_base_visitors, pct_return_visitors)
 
     return_visitors = get_return_visitors(db_session,return_sample,current_date)
     print(f"Number of return visitors: {len(return_visitors)}")
@@ -91,11 +102,10 @@ def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_vi
     interactions_df = pd.DataFrame(interactions)
 
     ##Write visitors, interactions to database table
-    ##TODO - figure out what to do with this
+    ##TODO: - figure out what to do with this - inefficient
     conn = sqlite3.connect(DB_PATH)
     interactions_df.to_sql('interactions', conn,if_exists='append',index=False, chunksize=500)
     conn.close()
 
     db_session.commit()
     db_session.close()
-    # return current_date + timedelta(days=1)
