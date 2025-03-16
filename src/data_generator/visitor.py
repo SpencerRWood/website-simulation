@@ -32,7 +32,7 @@ class Visitor(Base):
     return_visitor = Column(Boolean, default=False)
 
     def __init__(self, db_session, channel='Direct', return_visitor=False, visitor_id=None, name=None, gender=None, age=None, email=None, created_at=None):
-        self.db_session = db_session  # Attach SQLAlchemy session for DB interactions
+        self.db_session = db_session
         self.visitor_id = visitor_id if visitor_id else str(uuid.uuid4())
         self.channel = channel
         self.return_visitor = return_visitor
@@ -70,24 +70,6 @@ class Visitor(Base):
         self.db_session.merge(self)  # Upsert behavior
         self.db_session.commit()
 
-    @classmethod
-    def get_from_db(cls, db_session, visitor_id):
-        """Retrieve visitor from the database by ID."""
-        return db_session.query(cls).filter_by(visitor_id=visitor_id).first()
-
-    def to_dict(self):
-        """Convert visitor object to dictionary format."""
-        return {
-            'visitor_id': self.visitor_id,
-            'name': self.name if self.signed_up else None,
-            'gender': self.gender if self.signed_up else None,
-            'age': self.age if self.signed_up else None,
-            'email': self.email if self.signed_up else None,
-            'channel': self.channel,
-            'return_visitor': self.return_visitor,
-            'signed_up': self.signed_up,
-            'sign_up_timestamp': self.sign_up_timestamp
-        }
 def generate_visitors(db_session, num_visitors, created_at):
     """Create new visitor objects and persist them in the database."""
     visitors = [Visitor(db_session=db_session, created_at=created_at) for _ in range(num_visitors)]
@@ -105,7 +87,6 @@ def get_return_visitors(db_session, num_visitors, current_date):
     sampled_ids = random.sample(visitor_ids, min(len(visitor_ids), num_visitors))
     # Fetch full visitor records based on sampled IDs
     return db_session.query(Visitor).filter(Visitor.visitor_id.in_(sampled_ids)).all()
-
 
 def gaussian_arrivals(x, mean, sigma):
     """Set arrival rates based on gaussian (normal) distribution"""

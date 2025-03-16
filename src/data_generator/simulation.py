@@ -33,21 +33,45 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
 
     return visitor_sessions
 
+def seasonal_multiplier(date, gamma_1, gamma_2, harmonics=2):
+    """Computes seasonal adjustment using a Fourier series approximation.
+
+    Parameters:
+    t (int or array): Time index (e.g., week number).
+    gamma_1 (array): Coefficients for cosine terms.
+    gamma_2 (array): Coefficients for sine terms.
+    harmonics (int): Number of harmonics to include in the sum.
+
+    Returns:
+    float or array: Seasonality adjustment factor.
+    """
+    t = date.isocalendar()[1]
+    seasonality = np.zeros_like(t, dtype=float)
+    for d in range(1, harmonics + 1):
+        seasonality += gamma_1[d-1] * np.cos((2 * np.pi * d / 52) * t) \
+                       + gamma_2[d-1] * np.sin((2 * np.pi * d / 52) * t)
+    return seasonality
+
+def min_max_scaling(val_list, floor_val, ceiling_val):
+    min_val, max_val = min(val_list), max(val_list)
+    return [((val-min_val) / (max_val - min_val)) * (ceiling_val - floor_val) + floor_val for val in val_list]
+
 def sample_percentage(total, mean_percentage=0.10, std_dev_percentage=0.02, min_percentage=0.05, max_percentage=0.15):
     ##TODO: Make it return 10% of total - this means total + adjusted value
+    ##TODO: Add all parameters to config
     """Returns a fluctuating percentage of a total value, normally distributed around a mean."""
     sampled_percentage = np.random.normal(loc=mean_percentage, scale=std_dev_percentage)
     sampled_percentage = np.clip(sampled_percentage, min_percentage, max_percentage)
     
     return int(total * sampled_percentage)
 
-def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution):
+def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution, seasonality_factor=1):
     print(f"Running simulation for {current_date}")
     db_session = get_db_session(DB_PATH)
 
     ##Iniatilize number of base visitors to the site for that day
-    n_num_base_visitors = int(np.random.normal(n_num_base_visitor_distribution["mean"]
-                                            , n_num_base_visitor_distribution["std_dev"]))
+    n_num_base_visitors = int((np.random.normal(n_num_base_visitor_distribution["mean"]
+                                            , n_num_base_visitor_distribution["std_dev"]))*seasonality_factor)
     print(f"Number of base visitors: {n_num_base_visitors}")
 
     ##TODO: Generate visitors from marketing channel
@@ -60,15 +84,7 @@ def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_vi
 
     ##Generate return visitors
     return_sample = sample_percentage(n_num_base_visitors)
-    ##TODO: func.random() is a db operation, not impacted by seeds
-    # return_visitors = (
-    #     db_session.query(Visitor)
-    #     .filter(Visitor.created_at < current_date)
-    #     .order_by(func.random())
-    #     .limit(return_sample)
-    #     .all()
-    #     )
-    
+
     return_visitors = get_return_visitors(db_session,return_sample,current_date)
     print(f"Number of return visitors: {len(return_visitors)}")
 
@@ -100,9 +116,9 @@ def run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_vi
     ##Write visitors, interactions to database table
     ##TODO - figure out what to do with this
     conn = sqlite3.connect(DB_PATH)
-    interactions_df.to_sql('interactions', conn,if_exists='append',index=False)
+    interactions_df.to_sql('interactions', conn,if_exists='append',index=False, chunksize=500)
     conn.close()
 
     db_session.commit()
     db_session.close()
-    return current_date + timedelta(days=1)
+    # return current_date + timedelta(days=1)

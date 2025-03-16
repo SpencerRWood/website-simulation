@@ -3,11 +3,13 @@
 import json
 import random
 import numpy as np
+import pandas as pd
 from faker import Faker
 from datetime import datetime
 
-from data_generator.simulation import run_daily_simulation
-from data_generator.database_utils import check_table_exists, initialize_campaign_table, check_database_exists, reset_database_tables, get_db_session
+from data_generator.simulation import run_daily_simulation, seasonal_multiplier, min_max_scaling
+from data_generator.database_utils import check_table_exists, initialize_campaign_table, reset_database_tables, get_db_session
+
 
 # Set the seed globally at the highest level
 ##FIXME: Number of page interactions are not setting Seeds correctly
@@ -28,15 +30,20 @@ def main(config):
     n_num_base_visitor_distribution = config["n_num_base_visitors"]
 
     ##TODO: Check if database exists and if not create it
-
     ##Check is campaign_data table exists
     # if not check_table_exists(DB_PATH, "campaigns"):
     #     initialize_campaign_table(DB_PATH, CSV_CAMPAIGN_PATH)
+    
+    ##TODO: Abstract this to a module - have the config params passed through
+    ##Create seasonlity factor
+    date_range = pd.date_range(start=start_date, end=end_date)
+    gamma_1 = np.random.uniform(0.5, 1, size=2)  # Amplitudes for cosine
+    gamma_2 = np.random.uniform(0.5, 1, size=2)  # Amplitudes for sine
+    seasonal_multiplier_list = [seasonal_multiplier(date,gamma_1,gamma_2) for date in date_range]
+    seasonality = min_max_scaling(seasonal_multiplier_list, 1, 1.25)
 
-    ##Run daily simulations based on start and end date
-    current_date = start_date
-    while current_date <= end_date:
-        current_date = run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution)
+    for i, current_date in enumerate(date_range):
+        run_daily_simulation(current_date, DB_PATH, website_structure, n_num_base_visitor_distribution, seasonality[i])
 
 if __name__ == '__main__':
     print('Starting program...')

@@ -1,5 +1,4 @@
 {
-
     "DB_PATH": "website_data.db",
     "CSV_CAMPAIGN_PATH": "campaign_data.csv",
     "start_date":"2025-01-01",
@@ -7,13 +6,6 @@
     "n_num_base_visitors": {
       "mean":500,
       "std_dev":50
-    },
-    "channel_distribution": {
-      "Direct": 0.30,
-      "Organic Search": 0.25,
-      "Paid Search": 0.20,
-      "Social Media": 0.15,
-      "Email": 0.10
     },
     "website_structure": {
       "Homepage": {
