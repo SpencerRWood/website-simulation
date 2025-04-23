@@ -2,6 +2,7 @@ import os
 import sqlite3
 import pandas as pd
 from .visitor import *
+from .models import *
 from sqlalchemy import create_engine, text
 
 def get_db_session(db_path="visitors.db"):
@@ -24,9 +25,8 @@ def initialize_campaign_table(db_path, csv_path):
     campaign_df = pd.read_csv(csv_path)
 
     # Ensure date columns are formatted correctly
-    campaign_df['start_date'] = pd.to_datetime(campaign_df['start_date']).dt.strftime('%Y-%m-%d')
-    campaign_df['end_date'] = pd.to_datetime(campaign_df['end_date']).dt.strftime('%Y-%m-%d')
-
+    campaign_df['start_date'] = pd.to_datetime(campaign_df['start_date'], format='%m/%d/%y').dt.strftime('%Y-%m-%d')
+    campaign_df['end_date'] = pd.to_datetime(campaign_df['end_date'], format='%m/%d/%y').dt.strftime('%Y-%m-%d')
     # Load data into SQLite; if table doesn't exist, it gets created automatically
     campaign_df.to_sql('campaigns', conn, if_exists='fail', index=False)
 

@@ -5,13 +5,15 @@ import sqlite3
 from datetime import timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func 
+from sqlalchemy import create_engine
 
 from .website import Session, Website
 from .visitor import Visitor,generate_visitors,get_return_visitors, visitor_arrival_times,gaussian_arrivals
-from .database_utils import get_db_session
+from .channel import Email, Display
+from .models import Interaction
 
 def simulate_visitor_sessions(env, website, visitors, arrival_times):
-    ##TODO: Optimize
+    ##TODO: Optimize this function
     """Simulates visitors arriving at specific times."""
     visitor_sessions = []
 
@@ -20,7 +22,7 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
         if delay > 0:
             yield env.timeout(delay)
 
-        session = Session(env, website, visitor)
+        session = Session(env, website, visitor, channel=visitor.channel)
         env.process(session.simulate_site_interactions())
         visitor_sessions.append(session)
     yield env.timeout(1) 
@@ -35,8 +37,6 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
     return visitor_sessions
 
 def sample_percentage(total, params_dict):
-    ##TODO: Make it return 10% of total - this means total + adjusted value
-    ##TODO: Add all parameters to config
     """Returns a fluctuating percentage of a total value, normally distributed around a mean."""
     min_percentage = 0.0
     max_percentage = None
@@ -50,38 +50,55 @@ def sample_percentage(total, params_dict):
     return int(total * sampled_percentage)
 
 def run_daily_simulation(current_date
-                         , DB_PATH
+                         , db_session
                          , website_structure
                          , n_num_base_visitor_distribution
-                         , pct_return_visitors
+                         , campaign_activity_by_day
                          , seasonality_factor=1):
+    current_date = current_date.date() if isinstance(current_date, pd.Timestamp) else current_date
     print(f"Running simulation for {current_date}")
-    db_session = get_db_session(DB_PATH)
 
-    ##Iniatilize number of base visitors to the site for that day
+    campaigns_today = campaign_activity_by_day.get(current_date, [])
+
+
+    ##Iniatilize number of base visitors to the site for that day and multiple by seasonality_factor
     n_num_base_visitors = int((np.random.normal(n_num_base_visitor_distribution["mean"]
                                             , n_num_base_visitor_distribution["std_dev"]))*seasonality_factor)
-    print(f"Number of base visitors: {n_num_base_visitors}")
 
     ##TODO: Generate visitors from marketing channel
 
     ##Generate base visitors, store data in dataframe
     new_visitors = generate_visitors(db_session, n_num_base_visitors, created_at=current_date)
-    for visitor in new_visitors:
-        visitor.save_to_db()
+    
+    display_visitors, email_visitors = [], []
 
-    ##Generate return visitors
-    return_sample = sample_percentage(n_num_base_visitors, pct_return_visitors)
+    for campaign in campaigns_today:
+        if campaign['channel'] == 'Display':
+            display = Display(campaign)
+            display_visitors += display.generate_visitors(current_date, db_session)
+        elif campaign['channel'] == 'Email':
+            email_users = db_session.query(Visitor).filter(Visitor.email != None, Visitor.converted == False).all()
+            email = Email(campaign)
+            email_visitors += email.generate_visitors(current_date, db_session, email_users)
+    
+    db_session.bulk_save_objects(display_visitors + new_visitors)
+    db_session.commit()
 
-    return_visitors = get_return_visitors(db_session,return_sample,current_date)
-    print(f"Number of return visitors: {len(return_visitors)}")
-
-    for visitor in return_visitors:
+    for visitor in email_visitors:
         visitor.db_session = db_session
 
+        if visitor.signed_up and visitor.marketing_funnel_stage == 'Consideration - Low Intent':
+            visitor.marketing_funnel_stage = 'Consideration - High Intent'
+            visitor.stage_last_updated_date = current_date
+            visitor.save_to_db()
+
     ##Combine visitor types
-    visitors = new_visitors + return_visitors
+    visitors = new_visitors + display_visitors + email_visitors
     n_num_total_visitors = len(visitors)
+    
+    print(f"Number of new visitors: {n_num_base_visitors}")
+    print(f"Number of email visitors: {len(email_visitors)}")
+    print(f"Number of display visitors: {len(display_visitors)}")
     print(f"Number of total visitors: {n_num_total_visitors}")
 
     ##Set arrival rates and normally distribute them throughout the day
@@ -94,18 +111,7 @@ def run_daily_simulation(current_date
     website = Website(env, website_structure, current_date)
     visitor_data = env.process(simulate_visitor_sessions(env, website, visitors, arrival_times))
     env.run()
-    
-    ##Exract interactions post simulation
-    interactions = []
-    for visitor in visitor_data.value:
-        interactions.extend(visitor.data)
-    interactions_df = pd.DataFrame(interactions)
+    interaction_objects = [Interaction(**record) for visitor in visitor_data.value for record in visitor.data]
 
-    ##Write visitors, interactions to database table
-    ##TODO: - figure out what to do with this - inefficient
-    conn = sqlite3.connect(DB_PATH)
-    interactions_df.to_sql('interactions', conn,if_exists='append',index=False, chunksize=500)
-    conn.close()
-
+    db_session.bulk_save_objects(interaction_objects)
     db_session.commit()
-    db_session.close()

@@ -9,16 +9,6 @@ def configure_gamma(seasonal_distribution):
     return (gamma_1, gamma_2)
          
 def generate_fourier_multiplier(date, gamma_tuple, harmonics=2):
-    """Computes seasonal adjustment using a Fourier series approximation.
-    Parameters:
-    t (int or array): Time index (e.g., week number).
-    gamma_1 (array): Coefficients for cosine terms.
-    gamma_2 (array): Coefficients for sine terms.
-    harmonics (int): Number of harmonics to include in the sum.
-
-    Returns:
-    float or array: Seasonality adjustment factor.
-    """
     gamma_1, gamma_2 = gamma_tuple
     t = date.isocalendar()[1]
     fourier_multiplier = np.zeros_like(t, dtype=float)

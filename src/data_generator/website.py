@@ -1,3 +1,5 @@
+##TODO: Make drop-off probabilities normally distributed
+
 import random
 from datetime import timedelta, datetime
 
@@ -56,6 +58,10 @@ class Session:
             # print(f'Visitor {self.visitor.visitor_id} signed up on {page}')
             self.visitor.complete_signup(db_session=self.visitor.db_session, timestamp=timestamp)  # Ensure update is committed
 
+        if self.website.pages.get(page, {}).get("conversion", False):
+                    #print(f'Visitor {self.visitor.visitor_id} converted on {page}')
+                    self.visitor.complete_conversion(db_session=self.visitor.db_session, timestamp=timestamp)
+        
         if self.website.dropoff(page):  
             yield self.env.timeout(1)
             return  

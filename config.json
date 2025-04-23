@@ -51,12 +51,13 @@
       "Review Enrollment": {
         "dropoff_probability": 0.1,
         "clickable_elements": [], 
-        "navigation_elements": ["Confirm Enrollment"]
+        "navigation_elements": ["Enrollment Confirmation"]
       },
       "Enrollment Confirmation": {
         "dropoff_probability": 0.1,
         "clickable_elements": [],
-        "navigation_elements": []
+        "navigation_elements": [],
+        "conversion": true
       }
     }
   }
