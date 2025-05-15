@@ -44,8 +44,8 @@ class Email:
         opened_users = np.random.choice(email_users, num_opens, replace=False)
         clicked_users = np.random.choice(opened_users, num_clicks, replace=False)
         for visitor in clicked_users:
-            visitor.return_visitor = True  # Optional update
-            visitor.channel = 'Email'     # Optional update
+            visitor.return_visitor = True
+            visitor.channel = 'Email'  
         return list(clicked_users)
     
 def generate_normalized_spend(total_spend, active_days, pct_std_dev=0.1):
