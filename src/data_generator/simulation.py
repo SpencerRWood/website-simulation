@@ -13,7 +13,6 @@ from .channel import Email, Display
 from .models import Interaction
 
 def simulate_visitor_sessions(env, website, visitors, arrival_times):
-    ##TODO: Optimize this function
     """Simulates visitors arriving at specific times."""
     visitor_sessions = []
 
@@ -26,13 +25,6 @@ def simulate_visitor_sessions(env, website, visitors, arrival_times):
         env.process(session.simulate_site_interactions())
         visitor_sessions.append(session)
     yield env.timeout(1) 
-
-    # def process_visitor(visitor, arrival_time):
-    #     delay = arrival_time - env.now
-    #     if delay > 0:
-    #         yield env.timeout(delay)
-    #     session = Session(env, website, visitor)
-    #     env.process(session.simulate_site_interactions())
 
     return visitor_sessions
 
@@ -62,13 +54,11 @@ def run_daily_simulation(current_date
 
 
     ##Iniatilize number of base visitors to the site for that day and multiple by seasonality_factor
-    n_num_base_visitors = int((np.random.normal(n_num_base_visitor_distribution["mean"]
+    n_num_new_visitors = int((np.random.normal(n_num_base_visitor_distribution["mean"]
                                             , n_num_base_visitor_distribution["std_dev"]))*seasonality_factor)
 
-    ##TODO: Generate visitors from marketing channel
-
     ##Generate base visitors, store data in dataframe
-    new_visitors = generate_visitors(db_session, n_num_base_visitors, created_at=current_date)
+    new_visitors = generate_visitors(db_session, n_num_new_visitors, created_at=current_date)
     
     display_visitors, email_visitors = [], []
 
@@ -96,7 +86,7 @@ def run_daily_simulation(current_date
     visitors = new_visitors + display_visitors + email_visitors
     n_num_total_visitors = len(visitors)
     
-    print(f"Number of new visitors: {n_num_base_visitors}")
+    print(f"Number of new visitors: {n_num_new_visitors}")
     print(f"Number of email visitors: {len(email_visitors)}")
     print(f"Number of display visitors: {len(display_visitors)}")
     print(f"Number of total visitors: {n_num_total_visitors}")

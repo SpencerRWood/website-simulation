@@ -22,3 +22,5 @@ python db_setup.py
 ```bash
 python main.py
 ```
+
+Note - src folder contains source code that is split up into modules that are imported across the application. the csv files are "start-up" files for initializing the campaign tables and activities, these are necessary to inform the campaign driven channels (display and email).

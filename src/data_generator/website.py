@@ -1,5 +1,3 @@
-##TODO: Make drop-off probabilities normally distributed
-
 import random
 from datetime import timedelta, datetime
 

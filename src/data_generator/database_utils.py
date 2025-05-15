@@ -11,11 +11,6 @@ def get_db_session(db_path="visitors.db"):
     Session = sessionmaker(bind=engine)
     return Session()
 
-# def check_database_exists(db_path):
-#     """Ensure the database and tables exist by initializing ORM."""
-#     session = get_db_session(db_path)
-#     session.close()
-
 def initialize_campaign_table(db_path, csv_path):
     """Check if campaigns table exists; if not, create and populate it using pandas.to_sql()."""
     

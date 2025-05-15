@@ -1,6 +1,4 @@
-##TODO: If someone has signed up, make sure it doesn't over write the status if they move through again
-##TODO: Implement MLFlow for experiment tracking
-##TODO: Implement tests to check to make sure the number of visitors generated is the same as the visitors entering the site
+
 import json
 import random
 import numpy as np
@@ -66,5 +64,3 @@ if __name__ == '__main__':
     reset_database_tables(config)
     ##Run main file
     main(config)
-
-#     print('Program complete!')

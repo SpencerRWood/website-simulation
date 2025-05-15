@@ -1,7 +1,3 @@
-##FIXME: Fix visitor channel attribute - need it to be at the session level
-##FIXME: Total visitors generated aren't 100% interacting with the website - need to debug what is going on
-##TODO: Implement logging
-
 import uuid
 import random
 import pandas as pd
