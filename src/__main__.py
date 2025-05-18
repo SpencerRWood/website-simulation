@@ -6,19 +6,36 @@ import pandas as pd
 from faker import Faker
 from datetime import datetime
 import sqlite3
+import mlflow
+import tempfile
 
 from data_generator.season import seasonal_multiplier
 from data_generator.channel import build_campaign_activity_lookup
 from data_generator.simulation import run_daily_simulation
-from data_generator.database_utils import check_table_exists, initialize_campaign_table, reset_database_tables, get_db_session
+from data_generator.utils import check_table_exists, initialize_campaign_table, reset_database_tables, get_db_session, flatten_dict
+import json
 
 # Set the seed globally at the highest level
 SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 Faker.seed(SEED)
+mlflow.set_tracking_uri("http://localhost:5000")
 
 def main(config):
+    print('Logging simulation parameters...')
+
+    with mlflow.start_run(run_name="simulation_run"):
+        flat_config = flatten_dict(config)
+
+        for key, value in flat_config.items():
+            mlflow.log_param(key, value)
+
+        # Optional: also save full config as artifact
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as tmp:
+            json.dump(config, tmp, indent=2)
+            tmp.flush()
+            mlflow.log_artifact(tmp.name, artifact_path="config")
 
     ##Create config dictionaries
     DB_PATH = config["DB_PATH"]
